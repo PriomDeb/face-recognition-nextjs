@@ -1,5 +1,6 @@
 "use client";
 
+import { getStudentImage } from "@/lib/actions/face.action";
 // FaceRecognition.jsx
 
 import React from "react";
@@ -61,10 +62,9 @@ const FaceRecognition = () => {
 
     const start = async () => {
       try {
+        getStudentImage();
         // Fetch student names
-        const res = await fetch("/api/students");
-        const data = await res.json();
-        const labels = (data?.names || []).filter(Boolean);
+        const labels = await getStudentImage();
         if (!labels.length) {
           setStatus("No students found in /public/labeled_images");
           return;
