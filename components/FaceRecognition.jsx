@@ -76,7 +76,7 @@ const FaceRecognition = () => {
         const labeled = await Promise.all(
           labels.map(async (label) => {
             const desc = [];
-            for (let i = 1; i <= 2; i++) {
+            for (let i = 1; i <= 1; i++) {
               try {
                 const img = await faceapi.fetchImage(
                   `/labeled_images/${label}/${i}.jpg`
