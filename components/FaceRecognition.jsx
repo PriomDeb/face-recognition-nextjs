@@ -11,8 +11,8 @@ const FaceRecognition = () => {
   const loopRef = useRef(null); // interval id
   const startedRef = useRef(false);
 
-  const [status, setStatus] = useState("Loading models…");
-  const [detected, setDetected] = useState("—");
+  const [status, setStatus] = useState("Loading models...");
+  const [detected, setDetected] = useState("System is loading...");
   const [faceapi, setFaceapi] = useState(null);
 
   // 1) Load face-api and models client-side only
@@ -20,21 +20,27 @@ const FaceRecognition = () => {
     let mounted = true;
     (async () => {
       try {
-        const fa = await import("face-api.js");
+        const faceAPI = await import("face-api.js");
+
         if (!mounted) return;
-        setFaceapi(fa);
+        setFaceapi(faceAPI);
         setStatus("Loading face models…");
+
         await Promise.all([
-          fa.nets.tinyFaceDetector.loadFromUri("/models"),
-          fa.nets.faceLandmark68Net.loadFromUri("/models"),
-          fa.nets.faceRecognitionNet.loadFromUri("/models"),
+          faceAPI.nets.tinyFaceDetector.loadFromUri("/models"),
+          faceAPI.nets.faceLandmark68Net.loadFromUri("/models"),
+          faceAPI.nets.faceRecognitionNet.loadFromUri("/models"),
         ]);
+
         setStatus("Starting camera…");
+
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: "user" },
           audio: false,
         });
+
         if (!mounted) return;
+
         videoRef.current.srcObject = stream;
         await new Promise((res) => (videoRef.current.onloadedmetadata = res));
         videoRef.current.play();
@@ -70,7 +76,7 @@ const FaceRecognition = () => {
         const labeled = await Promise.all(
           labels.map(async (label) => {
             const desc = [];
-            for (let i = 1; i <= 5; i++) {
+            for (let i = 1; i <= 2; i++) {
               try {
                 const img = await faceapi.fetchImage(
                   `/labeled_images/${label}/${i}.jpg`
@@ -81,7 +87,7 @@ const FaceRecognition = () => {
                   .withFaceDescriptor();
                 if (det?.descriptor) desc.push(det.descriptor);
 
-                console.log(desc);
+                // console.log("Find", label, desc);
                 console.log(Array.from(det.desc)); // converts to regular array
               } catch (_) {
                 // image missing; skip silently
@@ -91,8 +97,12 @@ const FaceRecognition = () => {
             return new faceapi.LabeledFaceDescriptors(label, desc);
           })
         );
+        // Labeled contains _label and _descriptor[]
+        // console.log("Find: ", labeled);
 
         const labeledDescriptors = labeled.filter(Boolean);
+        // console.log("Find:", labeledDescriptors);
+
         if (!labeledDescriptors.length) {
           setStatus(
             "No valid reference images found (make sure 1.jpg etc. exist)"
@@ -114,6 +124,7 @@ const FaceRecognition = () => {
 
         // Clear any previous loop
         if (loopRef.current) clearInterval(loopRef.current);
+
         startedRef.current = true;
 
         // Run every 200ms
