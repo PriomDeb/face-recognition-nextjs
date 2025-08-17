@@ -10,9 +10,8 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "IELTS Score",
-  description:
-    "Get your IELTS writing score and feedback using the power of AI.",
+  title: "Smart Attendance",
+  description: "Class attendance automation using AI driven solution.",
 };
 
 export default function RootLayout({
