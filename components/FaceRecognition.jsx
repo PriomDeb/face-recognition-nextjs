@@ -1,6 +1,6 @@
 "use client";
 
-import { getStudentImage } from "@/lib/actions/face.action";
+import { getStudentImage } from "@/lib/actions/server.action";
 // FaceRecognition.jsx
 
 import React from "react";
@@ -146,13 +146,16 @@ const FaceRecognition = () => {
 
             let anyName = "Unable to detect";
             resized.forEach((d) => {
+              const confidence = d.detection.score;
               const best = matcher.findBestMatch(d.descriptor);
               const name =
                 best.label === "unknown" ? "Unable to detect" : best.label;
-              if (name !== "Unable to detect") anyName = name;
-              new faceapi.draw.DrawBox(d.detection.box, { label: name }).draw(
-                canvas
-              );
+              if (name !== "Unable to detect") {
+                anyName = name;
+              }
+              new faceapi.draw.DrawBox(d.detection.box, {
+                label: `${name} ${(confidence * 100).toFixed(1)}%`,
+              }).draw(canvas);
             });
 
             setDetected(anyName);
