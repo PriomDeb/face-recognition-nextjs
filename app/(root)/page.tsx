@@ -39,6 +39,8 @@ const Dashboard = async () => {
         IconComponent={FaChartLine}
         color="text-brand-100"
       />
+
+      <p className="text-center text-error">Dummy numerial data right now.</p>
     </div>
   );
 };

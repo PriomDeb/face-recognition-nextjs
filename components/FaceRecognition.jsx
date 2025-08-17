@@ -3,6 +3,8 @@
 import { getStudentImage } from "@/lib/actions/server.action";
 // FaceRecognition.jsx
 
+// createCanvasFromMedia - media has not finished loading yet
+
 import React from "react";
 import { useEffect, useRef, useState } from "react";
 
