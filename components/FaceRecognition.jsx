@@ -146,7 +146,7 @@ const FaceRecognition = () => {
 
             let anyName = "Unable to detect";
             resized.forEach((d) => {
-              const confidence = d.detection.score;
+              const confidence = (d.detection.score * 100).toFixed(1);
               const best = matcher.findBestMatch(d.descriptor);
               const name =
                 best.label === "unknown" ? "Unable to detect" : best.label;
@@ -154,7 +154,7 @@ const FaceRecognition = () => {
                 anyName = name;
               }
               new faceapi.draw.DrawBox(d.detection.box, {
-                label: `${name} ${(confidence * 100).toFixed(1)}%`,
+                label: `${name} ${confidence}%`,
               }).draw(canvas);
             });
 
