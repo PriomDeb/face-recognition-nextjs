@@ -14,21 +14,26 @@ const Sidebar = () => {
   return (
     <aside className="sidebar">
       <Link href={"/"}>
-        <Image
-          src={"/assets/icons/logo-brand.svg"}
-          alt="logo"
-          width={160}
-          height={50}
-          className="hidden h-auto lg:block"
-        />
+        <div className="flex items-center justify-center">
+          <Image
+            src={"/assets/icons/logo-brand.png"}
+            alt="logo"
+            width={62}
+            height={52}
+            className="hidden h-auto lg:block"
+          />
+          <h1 className="hidden lg:block text-2xl font-bold ml-2">
+            Smart Attendance
+          </h1>
 
-        <Image
-          src={"/assets/icons/logo-brand.svg"}
-          alt="logo"
-          width={52}
-          height={52}
-          className="lg:hidden"
-        />
+          <Image
+            src={"/assets/icons/logo-brand.png"}
+            alt="logo"
+            width={52}
+            height={52}
+            className="lg:hidden"
+          />
+        </div>
       </Link>
 
       <nav className="sidebar-nav">
