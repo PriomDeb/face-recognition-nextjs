@@ -1,11 +1,12 @@
+import AddStudent from "@/components/AddStudent";
 import StudentsTable from "@/components/StudentsTable";
-import { getStudents } from "@/lib/actions/server.action";
+import { Button } from "@/components/ui/button";
 import React from "react";
 
-const ManageStudents = async () => {
+const ManageStudents = () => {
   return (
     <div>
-      {/* <pre>{JSON.stringify(students)}</pre> */}
+      <AddStudent />
       <StudentsTable />
     </div>
   );
