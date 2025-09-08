@@ -2,11 +2,12 @@
 // face.action.ts
 
 import { db } from "@/db/drizzle";
-import { students } from "@/db/schema";
+import { studentImages, students } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 import { readdir } from "fs/promises";
 import path from "path";
+import fs from "fs";
 
 export const getStudentImage = async () => {
   try {
@@ -30,6 +31,7 @@ export async function getStudents() {
 type CreateStudentInput = {
   name: string;
   email: string;
+  rollNumber?: string;
   phone?: string;
   faceRegistered?: boolean;
 };
@@ -39,6 +41,7 @@ export async function createStudent({
   name,
   email,
   phone,
+  rollNumber = "",
   faceRegistered = false,
 }: CreateStudentInput) {
   try {
@@ -62,6 +65,7 @@ export async function createStudent({
         name,
         email,
         phone,
+        rollNumber,
         faceRegistered,
       })
       .returning();
@@ -132,7 +136,55 @@ export async function deleteStudent(id: string) {
   }
 }
 
-//------------------------ ------------------------//
+//------------------------ Upload Images ------------------------//
+
+export async function saveStudentImage(
+  file: File,
+  studentName: string,
+  studentId: string
+) {
+  try {
+    // Convert file to buffer
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+
+    // Ensure directory exists
+    const dir = path.join(
+      process.cwd(),
+      "public",
+      "labeled_images",
+      studentName
+    );
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+
+    // Save file as 1.jpg (or increment later if multiple)
+    const filePath = path.join(dir, "1.jpg");
+    fs.writeFileSync(filePath, buffer);
+
+    // Convert to public path (for frontend use)
+    const publicPath = `/labeled_images/${studentName}/1.jpg`;
+
+    // Insert record into student_images table
+    await db.insert(studentImages).values({
+      studentId,
+      imagePath: publicPath,
+    });
+
+    // Optionally update student’s faceRegistered flag
+    await db
+      .update(students)
+      .set({ faceRegistered: true })
+      .where(eq(students.id, studentId));
+
+    return { success: true, filePath: publicPath };
+  } catch (error) {
+    console.error("Error saving student image:", error);
+    return { success: false, message: "Failed to save image" };
+  }
+}
+
 //------------------------ ------------------------//
 //------------------------ ------------------------//
 //------------------------ ------------------------//

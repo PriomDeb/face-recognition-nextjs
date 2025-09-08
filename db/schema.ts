@@ -13,6 +13,7 @@ import {
 export const students = pgTable("students", {
   id: uuid("id").defaultRandom().primaryKey(), // Unique student ID
   name: text("name").notNull(),
+  rollNumber: text("rollNumber"),
   email: text("email").notNull().unique(),
   phone: text("phone"),
   faceRegistered: boolean("face_registered").default(false).notNull(),

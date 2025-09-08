@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createStudent } from "@/lib/actions/server.action";
+import { createStudent, saveStudentImage } from "@/lib/actions/server.action";
 // import { createAccount, signInUser } from "@/lib/actions/user.action";
 // import OTPModal from "./OTPModal";
 
@@ -30,7 +30,9 @@ const authFormSchema = () => {
     rollNumber: z.string(),
     email: z.string().email(),
     phone: z.string(),
-    image: z.string(),
+    image: z
+      .any()
+      .refine((file) => file instanceof File, "Image must be a file"),
   });
 };
 
@@ -41,6 +43,8 @@ const StudentForm = () => {
   const [accountId, setAccountId] = useState(null);
 
   const formSchema = authFormSchema();
+  const [preview, setPreview] = useState<string | null>(null);
+  const [imageStored, setImageStored] = useState(false);
 
   // 1. Define your form.
   const form = useForm<z.infer<typeof formSchema>>({
@@ -50,7 +54,7 @@ const StudentForm = () => {
       rollNumber: "",
       email: "",
       phone: "",
-      image: "",
+      image: undefined,
     },
   });
 
@@ -61,38 +65,29 @@ const StudentForm = () => {
     setIsLoading(true);
     setErrorMessage("");
 
-    // try {
-    //   const user =
-    //     type === "sign-up"
-    //       ? await createAccount({
-    //           fullName: values.fullName || "",
-    //           email: values.email,
-    //         })
-    //       : await signInUser({ email: values.email });
-
-    //   setAccountId(user.accountId);
-    // } catch (error) {
-    //   setErrorMessage("Error while creating an account. Please try again.");
-    // } finally {
-    //   setIsLoading(false);
-    // }
-
     try {
-      await createStudent({
+      // 1. Save student record
+      const studentResult = await createStudent({
         name: values.fullName,
         email: values.email,
         phone: values.phone,
-        faceRegistered: false,
+        rollNumber: values.rollNumber,
       });
+
+      if (!studentResult.success || !studentResult.student) {
+        throw new Error(studentResult.message || "Failed to create student");
+      }
+
+      const studentId = studentResult.student.id;
+
+      // 2. Save image (if file uploaded)
+      if (values.image instanceof File) {
+        await saveStudentImage(values.image, values.fullName, studentId);
+      }
 
       toast("Student is added.", {
-        description: "",
-        action: {
-          label: "Close",
-          onClick: () => console.log("Toast Closed"),
-        },
+        action: { label: "Close", onClick: () => {} },
       });
-
       router.push("/students");
     } catch (error) {
       setErrorMessage("Error while adding a student. Please try again.");
@@ -203,7 +198,7 @@ const StudentForm = () => {
             )}
           />
 
-          <FormField
+          {/* <FormField
             control={form.control}
             name="image"
             render={({ field }) => (
@@ -224,7 +219,47 @@ const StudentForm = () => {
                 <FormMessage className="shad-form-message" />
               </FormItem>
             )}
+          /> */}
+          <FormField
+            control={form.control}
+            name="image"
+            render={({ field }) => (
+              <FormItem>
+                <div className="shad-form-item">
+                  <FormLabel className="shad-form-label">
+                    Upload Photo
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          field.onChange(file); // store File in form state
+                          setPreview(URL.createObjectURL(file)); // generate preview
+                        }
+                      }}
+                      className="shad-input hover:cursor-pointer"
+                    />
+                  </FormControl>
+                </div>
+                <FormMessage className="shad-form-message" />
+              </FormItem>
+            )}
           />
+
+          {preview && (
+            <div className="mt-2">
+              <Image
+                src={preview}
+                alt="Preview"
+                width={120}
+                height={120}
+                className="rounded-md border"
+              />
+            </div>
+          )}
 
           <Button
             type="submit"
