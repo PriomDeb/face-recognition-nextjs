@@ -14,6 +14,12 @@ export const navItems = [
     icon: "/assets/icons/documents.svg",
     url: "/students",
   },
+
+  {
+    name: "Attendance",
+    icon: "/assets/icons/file-csv.svg",
+    url: "/attendance",
+  },
 ];
 
 export const avatarPlaceholderUrl =

@@ -204,7 +204,12 @@ export async function getStudentById(studentId: string) {
   return { ...student, imagePath: image?.imagePath };
 }
 
-//------------------------ ------------------------//
+//------------------------ Attendance Table ------------------------//
+
+export async function getAttendance() {
+  const allStudents = await db.select().from(attendanceRecords);
+  return allStudents;
+}
 
 // Marks attendance for a student
 export async function test(
@@ -254,12 +259,97 @@ export async function test(
   return { success: true, alreadyTaken: false };
 }
 
+// ---- Update Attendance ---- //
+type UpdateAttendanceInput = {
+  id: string;
+  name?: string;
+  status?: string;
+  section?: string;
+  confidence?: string;
+  date?: string | Date;
+};
+
+export async function updateAttendance({
+  id,
+  name,
+  status,
+  section,
+  confidence,
+  date,
+}: UpdateAttendanceInput) {
+  try {
+    const updateData: any = {
+      ...(name !== undefined && { name }),
+      ...(status !== undefined && { status }),
+      ...(section !== undefined && { section }),
+      ...(confidence !== undefined && { confidence }),
+    };
+
+    // Handle date if provided
+    if (date !== undefined) {
+      updateData.date = new Date(date);
+    }
+
+    updateData.updatedAt = new Date(); // add timestamp for tracking
+
+    const [updatedRecord] = await db
+      .update(attendanceRecords)
+      .set(updateData)
+      .where(eq(attendanceRecords.id, id))
+      .returning();
+
+    if (!updatedRecord) {
+      return { success: false, message: "Attendance record not found" };
+    }
+
+    return { success: true, attendance: updatedRecord };
+  } catch (error) {
+    console.error("Error updating attendance:", error);
+    return { success: false, message: "Failed to update attendance" };
+  }
+}
+
 // export async function test(name: string) {
 //   console.log("Find", name);
 
 // }
 
 //------------------------ ------------------------//
+
+export async function getDashboardStats() {
+  // Get total students
+  const totalStudents = await db.select().from(students);
+  const totalCount = totalStudents.length;
+
+  // Today’s date (start of the day)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Get all attendance records for today
+  const todayAttendance = await db
+    .select()
+    .from(attendanceRecords)
+    .where(gte(attendanceRecords.date, today));
+
+  const presentCount = todayAttendance.filter(
+    (record) => record.status === "Present"
+  ).length;
+
+  const absentCount = totalCount - presentCount;
+
+  // Attendance Rate = Present ÷ Total × 100
+  const rate =
+    totalCount > 0
+      ? ((presentCount / totalCount) * 100).toFixed(1) + "%"
+      : "0%";
+
+  return {
+    totalStudents: totalCount,
+    present: presentCount,
+    absent: absentCount,
+    rate,
+  };
+}
 //------------------------ ------------------------//
 //------------------------ ------------------------//
 //------------------------ ------------------------//
