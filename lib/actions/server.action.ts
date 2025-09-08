@@ -2,8 +2,8 @@
 // face.action.ts
 
 import { db } from "@/db/drizzle";
-import { studentImages, students } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { attendanceRecords, studentImages, students } from "@/db/schema";
+import { eq, gte, and } from "drizzle-orm";
 
 import { readdir } from "fs/promises";
 import path from "path";
@@ -205,6 +205,56 @@ export async function getStudentById(studentId: string) {
 }
 
 //------------------------ ------------------------//
+
+// Marks attendance for a student
+export async function markAttendance(
+  studentName: string,
+  sectionName: string,
+  confidence: number
+) {
+  // 1) Get student by name & section
+  const [student] = await db
+    .select()
+    .from(students)
+    .where(
+      and(eq(students.name, studentName), eq(students.section, sectionName))
+    );
+
+  if (!student) {
+    console.log(student);
+    return { success: false, message: "Student not found" };
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // start of today
+
+  // 2) Check if attendance already exists for today
+  const existing = await db
+    .select()
+    .from(attendanceRecords)
+    .where(
+      and(
+        eq(attendanceRecords.studentId, student.id),
+        gte(attendanceRecords.date, today)
+      )
+    );
+
+  if (existing.length > 0) {
+    return { success: true, alreadyTaken: true };
+  }
+
+  // 3) Insert attendance
+  await db.insert(attendanceRecords).values({
+    studentId: student.id,
+    section: sectionName,
+    status: "Present",
+    confidence: confidence.toFixed(2),
+    date: new Date(),
+  });
+
+  return { success: true, alreadyTaken: false };
+}
+
 //------------------------ ------------------------//
 //------------------------ ------------------------//
 //------------------------ ------------------------//
