@@ -51,6 +51,7 @@ export const attendanceRecords = pgTable("attendance_records", {
   date: timestamp("date", { withTimezone: true }).defaultNow().notNull(),
   status: text("status").notNull(), // e.g., "Present" / "Absent"
   section: text("section").notNull(),
+  name: text("name").notNull(),
   confidence: text("confidence"), // optional: store detection confidence
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()

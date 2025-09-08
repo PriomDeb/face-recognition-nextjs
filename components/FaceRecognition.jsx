@@ -1,6 +1,6 @@
 "use client";
 
-import { getStudentImage } from "@/lib/actions/server.action";
+import { getStudentImage, test } from "@/lib/actions/server.action";
 import React, { useEffect, useRef, useState } from "react";
 
 const FaceRecognition = () => {
@@ -135,6 +135,9 @@ const FaceRecognition = () => {
             new faceapi.draw.DrawBox(d.detection.box, {
               label: `${name} ${confidence}%`,
             }).draw(canvas);
+            console.log(name, section, confidence);
+
+            test(name, section, confidence);
           });
 
           setDetected(anyName);

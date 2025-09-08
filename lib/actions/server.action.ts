@@ -207,21 +207,19 @@ export async function getStudentById(studentId: string) {
 //------------------------ ------------------------//
 
 // Marks attendance for a student
-export async function markAttendance(
+export async function test(
   studentName: string,
   sectionName: string,
-  confidence: number
+  confidence: string
 ) {
   // 1) Get student by name & section
   const [student] = await db
     .select()
     .from(students)
-    .where(
-      and(eq(students.name, studentName), eq(students.section, sectionName))
-    );
+    .where(eq(students.name, studentName));
 
+  console.log(student);
   if (!student) {
-    console.log(student);
     return { success: false, message: "Student not found" };
   }
 
@@ -246,14 +244,20 @@ export async function markAttendance(
   // 3) Insert attendance
   await db.insert(attendanceRecords).values({
     studentId: student.id,
+    name: student.name,
     section: sectionName,
     status: "Present",
-    confidence: confidence.toFixed(2),
+    confidence: confidence,
     date: new Date(),
   });
 
   return { success: true, alreadyTaken: false };
 }
+
+// export async function test(name: string) {
+//   console.log("Find", name);
+
+// }
 
 //------------------------ ------------------------//
 //------------------------ ------------------------//
