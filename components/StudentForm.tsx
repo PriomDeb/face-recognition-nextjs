@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,8 +17,13 @@ import {
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { createStudent, saveStudentImage } from "@/lib/actions/server.action";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  createStudent,
+  getStudentById,
+  saveStudentImage,
+  updateStudent,
+} from "@/lib/actions/server.action";
 // import { createAccount, signInUser } from "@/lib/actions/user.action";
 // import OTPModal from "./OTPModal";
 
@@ -32,7 +37,8 @@ const authFormSchema = () => {
     phone: z.string(),
     image: z
       .any()
-      .refine((file) => file instanceof File, "Image must be a file"),
+      .refine((file) => file instanceof File, "Image must be a file")
+      .optional(),
   });
 };
 
@@ -60,49 +66,90 @@ const StudentForm = () => {
 
   const router = useRouter();
 
-  // 2. Define a submit handler.
+  const searchParams = useSearchParams();
+  const studentId = searchParams.get("studentId");
+  const isEditMode = !!studentId;
+
+  useEffect(() => {
+    if (!studentId) return; // only load if editing
+
+    const loadStudent = async () => {
+      const student = await getStudentById(studentId);
+      if (!student) return;
+
+      form.reset({
+        fullName: student.name || "",
+        rollNumber: student.rollNumber || "",
+        email: student.email || "",
+        phone: student.phone || "",
+        image: undefined, // cannot set File object, only preview if needed
+      });
+
+      if (student.imagePath) {
+        setPreview(`/labeled_images/${student.name}/1.jpg`);
+        setImageStored(true);
+      }
+    };
+
+    loadStudent();
+  }, [studentId]);
+
   const onSubmitHandler = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     setErrorMessage("");
 
     try {
-      // 1. Save student record
-      const studentResult = await createStudent({
-        name: values.fullName,
-        email: values.email,
-        phone: values.phone,
-        rollNumber: values.rollNumber,
-      });
+      let studentResult;
+
+      if (isEditMode && studentId) {
+        // Update existing student
+        studentResult = await updateStudent({
+          id: studentId,
+          name: values.fullName,
+          email: values.email,
+          phone: values.phone,
+          rollNumber: values.rollNumber,
+        });
+      } else {
+        // Create new student
+        studentResult = await createStudent({
+          name: values.fullName,
+          email: values.email,
+          phone: values.phone,
+          rollNumber: values.rollNumber,
+        });
+      }
 
       if (!studentResult.success || !studentResult.student) {
-        throw new Error(studentResult.message || "Failed to create student");
+        throw new Error(studentResult.message || "Failed to save student");
       }
 
-      const studentId = studentResult.student.id;
+      const savedStudentId = studentResult.student.id;
 
-      // 2. Save image (if file uploaded)
+      // Save image if uploaded
       if (values.image instanceof File) {
-        await saveStudentImage(values.image, values.fullName, studentId);
+        await saveStudentImage(values.image, values.fullName, savedStudentId);
       }
 
-      toast("Student is added.", {
+      toast(`Student ${isEditMode ? "updated" : "added"}.`, {
         action: { label: "Close", onClick: () => {} },
       });
+
       router.push("/students");
     } catch (error) {
-      setErrorMessage("Error while adding a student. Please try again.");
+      setErrorMessage(
+        `Error while ${isEditMode ? "updating" : "adding"} a student.`
+      );
 
-      toast("Error while adding the student.", {
-        description: "" + `${error}`,
-        action: {
-          label: "Close",
-          onClick: () => console.log("Toast Closed"),
-        },
+      toast(`Error while ${isEditMode ? "updating" : "adding"} student.`, {
+        description: `${error}`,
+        action: { label: "Close", onClick: () => {} },
       });
     } finally {
       setIsLoading(false);
     }
   };
+
   return (
     <div className="center">
       <Form {...form}>
@@ -111,7 +158,7 @@ const StudentForm = () => {
           className="auth-form"
         >
           <h1 className="form-title">
-            <p>Add Student</p>
+            <p>{isEditMode ? "Edit Student" : "Add Student"}</p>
           </h1>
 
           <FormField
@@ -198,28 +245,6 @@ const StudentForm = () => {
             )}
           />
 
-          {/* <FormField
-            control={form.control}
-            name="image"
-            render={({ field }) => (
-              <FormItem>
-                <div className="shad-form-item">
-                  <FormLabel className="shad-form-label">
-                    Student Face
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="student phone number"
-                      {...field}
-                      className="shad-input"
-                    />
-                  </FormControl>
-                </div>
-
-                <FormMessage className="shad-form-message" />
-              </FormItem>
-            )}
-          /> */}
           <FormField
             control={form.control}
             name="image"
@@ -266,7 +291,7 @@ const StudentForm = () => {
             className="form-submit-button"
             disabled={isLoading}
           >
-            <p>Add Student</p>
+            <p>{isEditMode ? "Update Student" : "Add Student"}</p>
             {isLoading && (
               <Image
                 src={"/assets/icons/loader.svg"}
@@ -279,22 +304,8 @@ const StudentForm = () => {
           </Button>
 
           {errorMessage && <p className="error-message">*{errorMessage}</p>}
-          {/* <div className="body-2 flex justify-center">
-            <p className="text-light-100">
-              ? "Don't have an account" : "Already have an account?"
-            </p>
-            <Link
-              href={"/sign-up/sign-in"}
-              className="ml-1 font-medium text-brand"
-            >
-              {"sign-inSign In"}
-            </Link>
-          </div> */}
         </form>
       </Form>
-
-      {/* {accountId && (
-      )} */}
     </div>
   );
 };

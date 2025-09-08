@@ -83,6 +83,7 @@ type UpdateStudentInput = {
   name?: string;
   email?: string;
   phone?: string;
+  rollNumber?: string;
   faceRegistered?: boolean;
 };
 
@@ -92,6 +93,7 @@ export async function updateStudent({
   email,
   phone,
   faceRegistered,
+  rollNumber,
 }: UpdateStudentInput) {
   try {
     const [updatedStudent] = await db
@@ -100,6 +102,7 @@ export async function updateStudent({
         ...(name !== undefined && { name }),
         ...(email !== undefined && { email }),
         ...(phone !== undefined && { phone }),
+        ...(rollNumber !== undefined && { rollNumber }),
         ...(faceRegistered !== undefined && { faceRegistered }),
         updatedAt: new Date(), // manually update timestamp
       })
@@ -185,7 +188,22 @@ export async function saveStudentImage(
   }
 }
 
-//------------------------ ------------------------//
+//------------------------ Get Student by StudentID ------------------------//
+export async function getStudentById(studentId: string) {
+  const [student] = await db
+    .select()
+    .from(students)
+    .where(eq(students.id, studentId));
+
+  // optionally, get imagePath
+  const [image] = await db
+    .select()
+    .from(studentImages)
+    .where(eq(studentImages.studentId, studentId));
+
+  return { ...student, imagePath: image?.imagePath };
+}
+
 //------------------------ ------------------------//
 //------------------------ ------------------------//
 //------------------------ ------------------------//
