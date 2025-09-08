@@ -18,8 +18,11 @@ import { Input } from "@/components/ui/input";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { createStudent } from "@/lib/actions/server.action";
 // import { createAccount, signInUser } from "@/lib/actions/user.action";
 // import OTPModal from "./OTPModal";
+
+import { toast } from "sonner";
 
 const authFormSchema = () => {
   return z.object({
@@ -54,7 +57,7 @@ const StudentForm = () => {
   const router = useRouter();
 
   // 2. Define a submit handler.
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmitHandler = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     setErrorMessage("");
 
@@ -75,9 +78,32 @@ const StudentForm = () => {
     // }
 
     try {
-      console.log("Find");
+      await createStudent({
+        name: values.fullName,
+        email: values.email,
+        phone: values.phone,
+        faceRegistered: false,
+      });
+
+      toast("Student is added.", {
+        description: "",
+        action: {
+          label: "Close",
+          onClick: () => console.log("Toast Closed"),
+        },
+      });
+
+      router.push("/students");
     } catch (error) {
-      setErrorMessage("Error while creating an account. Please try again.");
+      setErrorMessage("Error while adding a student. Please try again.");
+
+      toast("Error while adding the student.", {
+        description: "" + `${error}`,
+        action: {
+          label: "Close",
+          onClick: () => console.log("Toast Closed"),
+        },
+      });
     } finally {
       setIsLoading(false);
     }
@@ -85,7 +111,10 @@ const StudentForm = () => {
   return (
     <div className="center">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="auth-form">
+        <form
+          onSubmit={form.handleSubmit(onSubmitHandler)}
+          className="auth-form"
+        >
           <h1 className="form-title">
             <p>Add Student</p>
           </h1>
