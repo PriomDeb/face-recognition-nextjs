@@ -2,6 +2,7 @@
 
 import { getStudentImage, test } from "@/lib/actions/server.action";
 import React, { useEffect, useRef, useState } from "react";
+import { Button } from "./ui/button";
 
 const FaceRecognition = () => {
   const videoRef = useRef(null);
@@ -198,14 +199,15 @@ const FaceRecognition = () => {
 
       {/* Buttons */}
       <div style={{ marginBottom: 12 }}>
-        <button
+        <Button
           onClick={startCameraAndRecognition}
           disabled={!modelsLoaded || startedRef.current}
           style={{ padding: "8px 16px", fontSize: 16, cursor: "pointer" }}
+          className="bg-brand hover:bg-purple-500"
         >
           Start Camera
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={stopCamera}
           disabled={!startedRef.current}
           style={{
@@ -214,9 +216,10 @@ const FaceRecognition = () => {
             marginLeft: 12,
             cursor: "pointer",
           }}
+          className="bg-error hover:bg-rose-600"
         >
           Stop Camera
-        </button>
+        </Button>
       </div>
 
       <p style={{ marginTop: 8, fontSize: 14, opacity: 0.8 }}>{status}</p>
