@@ -75,3 +75,15 @@ export const studentImages = pgTable("student_images", {
     .defaultNow()
     .notNull(),
 });
+
+// -------------------- Admin Table --------------------
+export const admin = pgTable("admin", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  permission: boolean("permission").default(false).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
