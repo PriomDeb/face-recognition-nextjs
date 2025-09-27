@@ -27,7 +27,8 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "components/FaceRecognition.tsx"
+    "components/FaceRecognition.tsx",
+    "components/ProtectedRoute.jsx"
   ],
   "exclude": ["node_modules"]
 }
