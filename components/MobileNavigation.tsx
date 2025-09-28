@@ -16,6 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
+import { signOutTeacherServer } from "@/lib/actions/auth.action";
 // import { signOutUser } from "@/lib/actions/user.action";
 
 const MobileNavigation = () => {
@@ -93,7 +94,11 @@ const MobileNavigation = () => {
 
           <div className="flex flex-col justify-between gap-5 pb-5">
             {/* <FileUploader ownerId={ownerId} accountId={accountId} /> */}
-            <Button type="submit" className="mobile-sign-out-button">
+            <Button
+              type="submit"
+              className="mobile-sign-out-button"
+              onSubmit={signOutTeacherServer}
+            >
               <Image
                 src={"/assets/icons/logout.svg"}
                 alt="logo"
