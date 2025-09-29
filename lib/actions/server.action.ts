@@ -309,6 +309,25 @@ export async function updateAttendance({
   }
 }
 
+// ---- Delete Attendance ---- //
+export async function deleteAttendance(id: string) {
+  try {
+    const deleted = await db
+      .delete(attendanceRecords)
+      .where(eq(attendanceRecords.id, id))
+      .returning();
+
+    if (!deleted.length) {
+      return { success: false, message: "Attendance record not found" };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting attendance:", error);
+    return { success: false, message: "Failed to delete attendance" };
+  }
+}
+
 // export async function test(name: string) {
 //   console.log("Find", name);
 

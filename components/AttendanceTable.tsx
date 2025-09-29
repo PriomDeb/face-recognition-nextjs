@@ -1,7 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getAttendance, updateAttendance } from "@/lib/actions/server.action";
+import {
+  deleteAttendance,
+  getAttendance,
+  updateAttendance,
+} from "@/lib/actions/server.action";
 import DeleteStudentButton from "./DeleteStudent";
 import {
   Table,
@@ -199,17 +203,54 @@ const AttendanceTable = () => {
                   <TableCell>{student.confidence}%</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button
-                        className="bg-brand"
-                        onClick={() => handleEdit(student)}
-                      >
-                        Edit
-                      </Button>
-                      {/* <DeleteStudentButton
-                        studentId={student.id}
-                        name={student.name}
-                        onDeleted={() => handleStudentDeleted(student.id)}
-                      /> */}
+                      {editingId === student.id ? (
+                        <>
+                          <Button
+                            className="bg-brand-100"
+                            onClick={() => handleSave(student.id)}
+                          >
+                            Save
+                          </Button>
+                          <Button
+                            className="bg-gray-500"
+                            onClick={() => setEditingId(null)}
+                          >
+                            Cancel
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button
+                            className="bg-brand"
+                            onClick={() => handleEdit(student)}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            className="bg-error text-white"
+                            onClick={async () => {
+                              if (
+                                confirm(
+                                  `Delete attendance for ${student.name}?`
+                                )
+                              ) {
+                                const res = await deleteAttendance(student.id);
+                                if (res.success) {
+                                  setStudents((prev) =>
+                                    prev.filter((s) => s.id !== student.id)
+                                  );
+                                } else {
+                                  alert(
+                                    res.message || "Failed to delete record"
+                                  );
+                                }
+                              }
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </TableCell>
                 </>
