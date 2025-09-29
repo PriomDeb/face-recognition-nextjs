@@ -121,8 +121,36 @@ export async function updateStudent({
 }
 
 //---- Delete Student ----//
+// export async function deleteStudent(id: string) {
+//   try {
+//     const deleted = await db
+//       .delete(students)
+//       .where(eq(students.id, id))
+//       .returning();
+
+//     if (!deleted.length) {
+//       return { success: false, message: "Student not found" };
+//     }
+
+//     return { success: true };
+//   } catch (error) {
+//     console.error("Error deleting student:", error);
+//     return { success: false, message: "Failed to delete student" };
+//   }
+// }
 export async function deleteStudent(id: string) {
   try {
+    // 1. Find the student (to know their name)
+    const [student] = await db
+      .select()
+      .from(students)
+      .where(eq(students.id, id));
+
+    if (!student) {
+      return { success: false, message: "Student not found" };
+    }
+
+    // 2. Delete student from DB
     const deleted = await db
       .delete(students)
       .where(eq(students.id, id))
@@ -130,6 +158,21 @@ export async function deleteStudent(id: string) {
 
     if (!deleted.length) {
       return { success: false, message: "Student not found" };
+    }
+
+    // 3. Remove their image folder (if exists)
+    const studentDir = path.join(
+      process.cwd(),
+      "public",
+      "labeled_images",
+      student.name
+    );
+
+    if (fs.existsSync(studentDir)) {
+      fs.rmSync(studentDir, { recursive: true, force: true });
+      console.log(`🗑️ Deleted folder: ${studentDir}`);
+    } else {
+      console.log(`⚠️ Folder not found: ${studentDir}`);
     }
 
     return { success: true };
